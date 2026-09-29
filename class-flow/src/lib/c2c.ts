@@ -2,12 +2,8 @@
 // C2C Submissions Library – writes to sbg-c2c-submissions (new table)
 // ─────────────────────────────────────────────────────────────────────────────
 import { v4 as uuidv4 } from "uuid";
-import {
-  GetCommand,
-  PutCommand,
-  QueryCommand,
-} from "@aws-sdk/lib-dynamodb";
-import { db, TABLE, INDEX } from "./dynamodb";
+import { GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { db, TABLE } from "./dynamodb";
 import type { C2CSubmission, C2CFormData, SessionUser, Year } from "@/types";
 
 // ── Validation ────────────────────────────────────────────────────────────────
@@ -82,34 +78,6 @@ export function normalizePhone(phone: string): string {
   if (cleaned.startsWith("91") && cleaned.length === 12) return cleaned;
   if (cleaned.length === 10) return `91${cleaned}`;
   return cleaned;
-}
-
-// ── Duplicate check ────────────────────────────────────────────────────────────
-/**
- * Returns an existing submission if (memberId + eventId) already exists.
- * Duplicate policy: one submission per user per event.
- */
-export async function findExistingSubmission(
-  memberId: string,
-  eventId: string
-): Promise<C2CSubmission | null> {
-  try {
-    const result = await db.send(
-      new QueryCommand({
-        TableName:                 TABLE.C2C_SUBMISSIONS,
-        IndexName:                 INDEX.EVENT_MEMBER,
-        KeyConditionExpression:    "eventId = :eid AND memberId = :mid",
-        ExpressionAttributeValues: { ":eid": eventId, ":mid": memberId },
-        Limit:                     1,
-      })
-    );
-    if (result.Items && result.Items.length > 0) {
-      return result.Items[0] as C2CSubmission;
-    }
-    return null;
-  } catch {
-    return null;
-  }
 }
 
 // ── Create submission ─────────────────────────────────────────────────────────

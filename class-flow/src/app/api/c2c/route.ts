@@ -1,11 +1,7 @@
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { getEventById } from "@/lib/events";
-import {
-  validateC2CForm,
-  findExistingSubmission,
-  createC2CSubmission,
-} from "@/lib/c2c";
+import { validateC2CForm, createC2CSubmission } from "@/lib/c2c";
 import { buildWhatsAppMessage, generateWhatsAppURL } from "@/lib/whatsapp";
 import type { C2CFormData } from "@/types";
 
@@ -53,22 +49,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 5. Duplicate check — one submission per (memberId + eventId)
-  const existing = await findExistingSubmission(user.memberId, eventId);
-  if (existing) {
-    return Response.json(
-      {
-        success: false,
-        error:
-          "You have already submitted a C2C form for this event. " +
-          "Each member can submit once per event.",
-        submissionId: existing.submissionId,
-      },
-      { status: 409 }
-    );
-  }
-
-  // 6. Create submission in sbg-c2c-submissions
+  // 5. Create submission in sbg-c2c-submissions
+  //    Each call generates a fresh UUID — unlimited submissions per user are allowed.
   const submission = await createC2CSubmission(user, eventId, formData);
 
   // 7. Build WhatsApp URL — generated server-side, returned to client

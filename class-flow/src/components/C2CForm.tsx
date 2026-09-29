@@ -108,9 +108,7 @@ export function C2CForm({ event, user }: C2CFormProps) {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        if (res.status === 409) {
-          setApiError(data.error ?? "You have already submitted for this event.");
-        } else if (res.status === 422 && data.errors) {
+        if (res.status === 422 && data.errors) {
           setErrors(data.errors);
         } else {
           setApiError(data.error ?? "Submission failed. Please try again.");

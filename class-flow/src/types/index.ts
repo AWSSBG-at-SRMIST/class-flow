@@ -45,7 +45,8 @@ export interface SessionUser {
 export interface OTPRecord {
   email: string;       // PK
   hashedOtp: string;
-  expiresAt: string;   // ISO 8601
+  expiresAt: string;   // ISO 8601 (human-readable)
+  ttl?: number;        // Unix epoch seconds — for DynamoDB TTL feature
   attempts: number;
   createdAt: string;
   lockedUntil?: string; // ISO 8601 – set on too many failed attempts
