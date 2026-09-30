@@ -3,36 +3,19 @@
 // Uses wa.me deep link (Option A) — user presses Send themselves.
 // The app does NOT send messages automatically.
 // ─────────────────────────────────────────────────────────────────────────────
-import type { Event, C2CSubmission } from "@/types";
-import { formatEventDate } from "./events";
+import type { Event } from "@/types";
 
 /**
- * Build the pre-filled WhatsApp message.
- * Uses event details + C2C submission data.
+ * Returns the event-specific WhatsApp message from event.messageToCR.
+ * Source of truth: the selected event record in sbg-events.
+ *
+ * Returns null if the event does not have a messageToCR value —
+ * callers must handle this and MUST NOT substitute a fallback message.
  */
-export function buildWhatsAppMessage(
-  event: Event,
-  submission: C2CSubmission
-): string {
-  const date  = formatEventDate(event.date);
-  const venue = event.venue ?? "TBD";
-  const mode  = event.mode  ?? "TBD";
-
-  return (
-    `Hi! 👋\n\n` +
-    `I'm *${submission.inchargeName}*, the C2C Incharge for our class.\n\n` +
-    `I'd like to promote this upcoming *AWS SBG* event to our classmates:\n\n` +
-    `📌 *Event:* ${event.name}\n` +
-    `📅 *Date:* ${date}\n` +
-    `📍 *Venue:* ${venue}\n` +
-    `🖥️ *Mode:* ${mode}\n\n` +
-    `*Our Class Details:*\n` +
-    `🏫 *Room:* ${submission.roomNumber}\n` +
-    `📚 *Year:* ${submission.year}\n` +
-    `📝 *Section:* ${submission.section}\n\n` +
-    `Could you please share this with our classmates? 🙏\n\n` +
-    `— *AWS Student Builder Group, SRM IST*`
-  );
+export function getWhatsAppMessage(event: Event): string | null {
+  const msg = event.messageToCR;
+  if (typeof msg !== "string" || (msg as string).trim() === "") return null;
+  return msg as string;
 }
 
 /**

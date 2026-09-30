@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { getEventById } from "@/lib/events";
 import { validateC2CForm, createC2CSubmission } from "@/lib/c2c";
-import { buildWhatsAppMessage, generateWhatsAppURL } from "@/lib/whatsapp";
+import { getWhatsAppMessage, generateWhatsAppURL } from "@/lib/whatsapp";
 import type { C2CFormData } from "@/types";
 
 export async function POST(request: NextRequest) {
@@ -53,8 +53,21 @@ export async function POST(request: NextRequest) {
   //    Each call generates a fresh UUID — unlimited submissions per user are allowed.
   const submission = await createC2CSubmission(user, eventId, formData);
 
-  // 7. Build WhatsApp URL — generated server-side, returned to client
-  const message     = buildWhatsAppMessage(event, submission);
+  // 6. Read event-specific WhatsApp message — must come from event.messageToCR
+  const message = getWhatsAppMessage(event);
+  if (!message) {
+    return Response.json(
+      {
+        success: false,
+        error:
+          `This event does not have a CR message configured (messageToCR is missing on event "${event.name}"). ` +
+          "Please contact the event organiser to add it before promoting.",
+      },
+      { status: 422 }
+    );
+  }
+
+  // 7. Build WhatsApp URL — message is event.messageToCR, URL-encoded by generateWhatsAppURL
   const whatsappUrl = generateWhatsAppURL(submission.crPhone, message);
 
   return Response.json({
